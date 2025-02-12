@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Logocraft - AI Logo Generator</title>
+    <style>
+        /* ... (Same CSS as before) ... */
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh; /* Ensure full viewport height */
+            background-color: #f0f0f0; /* Light gray background */
+        }
+
+        #container {
+            width: 80%;
+            max-width: 900px; /* Limit width on larger screens */
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            margin-top: 20px; /* Add some top margin */
+            border-radius: 8px; /* Rounded corners */
+        }
+
+        #prompt-area {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        #prompt-input {
+
+
+
+            
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        #generate-button {
+            padding: 10px 20px;
+            background-color: #4CAF50; /* Green */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #logo-display {
+            display: flex;
+            justify-content: center; /* Center the image */
+        }
+
+        #logo-image {
+            max-width: 100%; /* Prevent image from overflowing */
+            height: auto;
+        }
+
+        #loading-indicator {
+            display: none; /* Hidden by default */
+            margin-top: 20px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            #prompt-area {
+                flex-direction: column; /* Stack input and button */
+            }
+
+            #prompt-input {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>Logocraft</h1>
+        <div id="prompt-area">
+            <input type="text" id="prompt-input" placeholder="Enter your logo description">
+            <button id="generate-button">Generate Logo</button>
+        </div>
+        <div id="logo-display">
+            <canvas id="logo-canvas" width="512" height="512"></canvas> </div>
+        <div id="loading-indicator">Generating...</div>
+    </div>
+
+    <script>
+        const promptInput = document.getElementById('prompt-input');
+        const generateButton = document.getElementById('generate-button');
+        const logoCanvas = document.getElementById('logo-canvas');
+        const ctx = logoCanvas.getContext('2d');
+        const loadingIndicator = document.getElementById('loading-indicator');
+
+        generateButton.addEventListener('click', () => {
+            const prompt = promptInput.value;
+
+            if (prompt.trim() === "") {
+                alert("Please enter a logo description.");
+                return;
+            }
+
+            loadingIndicator.style.display = 'block';
+            logoCanvas.style.display = 'none'; // Hide canvas
+
+            fetch('/generate_logo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ prompt: prompt })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const img = new Image();
+                img.onload = () => {
+                    ctx.clearRect(0, 0, logoCanvas.width, logoCanvas.height); // Clear previous image
+                    ctx.drawImage(img, 0, 0);
+                    loadingIndicator.style.display = 'none';
+                    logoCanvas.style.display = 'block'; // Show canvas
+                };
+                img.src = `data:image/png;base64,${data.image}`;
+            })
+            .catch(error => {
+                console.error('Error generating logo:', error);
+                alert("Error generating logo. Please try again later.");
+                loadingIndicator.style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>
